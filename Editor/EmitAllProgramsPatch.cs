@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
+using UdonSharp;
 using VRC.SDK3.Data;
 
 namespace UdonSharpProfiler {
@@ -73,6 +74,21 @@ namespace UdonSharpProfiler {
             codes.InsertRange(
                 paramInsertIndex,
                 AddUdonReflVars(UdonProfilerConsts.StopwatchHeapParentKey, typeof(DataDictionary), false)
+            );
+            
+            codes.InsertRange(
+                paramInsertIndex,
+                AddUdonReflVars(UdonProfilerConsts.StopwatchSelfKey, typeof(UdonSharpBehaviour), false)
+            );
+            
+            codes.InsertRange(
+                paramInsertIndex,
+                AddUdonReflVars(UdonProfilerConsts.StopwatchNameKey, typeof(string), false)
+            );
+            
+            codes.InsertRange(
+                paramInsertIndex,
+                AddUdonReflVars(UdonProfilerConsts.DoInjectTrackerKey, typeof(bool), false)
             );
 
             return codes.AsEnumerable();

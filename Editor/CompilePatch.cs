@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using UnityEngine;
 
 namespace UdonSharpProfiler {
-    public class CompilePatch {
+    public static class CompilePatch {
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator, MethodBase original) {
             var originalCodes = instructions.ToList();
             var codes = new List<CodeInstruction>(originalCodes);
@@ -35,7 +35,6 @@ namespace UdonSharpProfiler {
 
             var cancelTokenIndex = original.GetMethodBody().LocalVariables.FirstOrDefault(v => v.LocalType == typeof(CancellationToken)).LocalIndex;
             
-            
 
             var syntaxRebuilder = new List<CodeInstruction>();
 
@@ -55,8 +54,6 @@ namespace UdonSharpProfiler {
             syntaxRebuilder.Add(new CodeInstruction(OpCodes.Ldloc_S, cancelTokenIndex));
             syntaxRebuilder.Add(new CodeInstruction(OpCodes.Callvirt, typeof(SyntaxTree).GetMethod("GetRoot", new[] { typeof(CancellationToken) })));
             syntaxRebuilder.Add(new CodeInstruction(OpCodes.Stloc_S, tree));
-
-            
 
             // Create syntax walker
             //syntaxRebuilder.Add(new CodeInstruction(OpCodes.Ldstr, "UdonSharpProfiler.UdonStaticFunctions.TestFunction"));
@@ -94,10 +91,6 @@ namespace UdonSharpProfiler {
             syntaxRebuilder.Add(new CodeInstruction(OpCodes.Ldloc_S, binding));
             codes.InsertRange(injectIndex,
                 syntaxRebuilder);
-            
-            for (int i = injectIndex-2; i < injectIndex+2; i++) {
-                Debug.Log($"{codes[i].opcode.ToString()}: {codes[i].operand}");
-            }
             
             return codes.AsEnumerable();
         }

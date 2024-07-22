@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using TMPro;
 using UdonSharp;
@@ -34,7 +35,7 @@ using Random = UnityEngine.Random;
 #endif
 */
 
-[DefaultExecutionOrder(1000000000)]
+[DefaultExecutionOrder(-1000000000)]
 public class ProfileDataReader : UdonSharpBehaviour {
     public UdonSharpBehaviour target;
 
@@ -56,11 +57,11 @@ public class ProfileDataReader : UdonSharpBehaviour {
 
     [RecursiveMethod, DontUdonProfile]
     private void EmitTree(DataDictionary node) {
-        var start = node["start"].Long / 10;
-        var end = node["end"].Long / 10;
+        var start = (long)((double)node["start"].Long / Stopwatch.Frequency * 10000000);
+        var end = (long)((double)node["end"].Long / Stopwatch.Frequency * 10000000);
         var functionName = node["name"].String;
         
-        //Debug.Log($"{name}: {timer}");
+        //Debug.Log($"{name}: ts {start} - {end}, dur {end - start}");
         
         Emit(PerfettoHelper.CreatePacket()
             .AddEventName(functionName)

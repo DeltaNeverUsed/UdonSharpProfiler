@@ -11,6 +11,8 @@ using Debug = UnityEngine.Debug;
 namespace UdonSharpProfiler {
     [InitializeOnLoad]
     public static class Injections {
+        
+        
         public static Assembly UdonSharpAssembly = typeof(UdonSharpCompilerV1).Assembly;
 
         internal static Harmony _harmony;
@@ -30,7 +32,7 @@ namespace UdonSharpProfiler {
                 .FirstOrDefault(m => m.Name.Contains("<EmitAllPrograms>b__0"));
 
             if (lambdaMethod != null) {
-                var transpilerMethod = typeof(EmitAllProgramsPatch).GetMethod("Transpiler", BindingFlags.Static | BindingFlags.Public);
+                var transpilerMethod = typeof(EmitAllProgramsPatch).GetMethod(nameof(EmitAllProgramsPatch.Transpiler), BindingFlags.Static | BindingFlags.Public);
                 _harmony.Patch(lambdaMethod, transpiler: new HarmonyMethod(transpilerMethod));
             }
             
@@ -44,8 +46,32 @@ namespace UdonSharpProfiler {
             
             var compileMethod = typeof(UdonSharpCompilerV1).GetMethod("Compile", BindingFlags.NonPublic | BindingFlags.Static, null, compileMethodParameters, null);
             if (compileMethod != null) {
-                var transpilerMethod = typeof(CompilePatch).GetMethod("Transpiler", BindingFlags.Static | BindingFlags.Public);
+                var transpilerMethod = typeof(CompilePatch).GetMethod(nameof(CompilePatch.Transpiler), BindingFlags.Static | BindingFlags.Public);
                 _harmony.Patch(compileMethod, transpiler: new HarmonyMethod(transpilerMethod));
+            }
+            
+            var getDeclarationStrMethod = ReflectionHelper.GetMethod(ReflectionHelper.ByName("UdonSharp.Compiler.Emit.Value"), "GetDeclarationStr", Type.EmptyTypes, BindingFlags.Public | BindingFlags.Instance);
+            if (getDeclarationStrMethod != null) {
+                var postfixMethod = typeof(GetDeclarationStrPatch).GetMethod(nameof(GetDeclarationStrPatch.Postfix), BindingFlags.Static | BindingFlags.Public);
+                _harmony.Patch(getDeclarationStrMethod, postfix: new HarmonyMethod(postfixMethod));
+            }
+
+            
+            var methodSymbolEmitMethod = ReflectionHelper.ByName("UdonSharp.Compiler.Symbols.MethodSymbol")
+                .GetMethod("Emit", BindingFlags.Public | BindingFlags.Instance);
+            
+            if (methodSymbolEmitMethod != null) {
+                var prefixMethod = typeof(MethodSymbolEmitPatch).GetMethod(nameof(MethodSymbolEmitPatch.Prefix), BindingFlags.Static | BindingFlags.Public);
+                var postfixMethod = typeof(MethodSymbolEmitPatch).GetMethod(nameof(MethodSymbolEmitPatch.PostFix), BindingFlags.Static | BindingFlags.Public);
+                var transpileMethod = typeof(MethodSymbolEmitPatch).GetMethod(nameof(MethodSymbolEmitPatch.Transpiler), BindingFlags.Static | BindingFlags.Public);
+                _harmony.Patch(methodSymbolEmitMethod, prefix: new HarmonyMethod(prefixMethod), postfix: new HarmonyMethod(postfixMethod), transpiler: new HarmonyMethod(transpileMethod));
+            }
+            
+            var emitReturnMethod = ReflectionHelper.GetMethod(ReflectionHelper.ByName("UdonSharp.Compiler.Emit.EmitContext"), "EmitReturn", Type.EmptyTypes, BindingFlags.Public | BindingFlags.Instance);
+            
+            if (emitReturnMethod != null) {
+                var prefixMethod = typeof(EmitContextEmitReturnPatch).GetMethod(nameof(EmitContextEmitReturnPatch.Prefix), BindingFlags.Static | BindingFlags.Public);
+                _harmony.Patch(emitReturnMethod, prefix: new HarmonyMethod(prefixMethod));
             }
         }
 
