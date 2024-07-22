@@ -149,16 +149,15 @@ if (VRC.SDKBase.Utilities.IsValid(parent)) {
 }}")
                     ));
 
-                var classDeclaration = root.DescendantNodes().OfType<ClassDeclarationSyntax>().First();
-                var newClassDeclaration = classDeclaration.AddMembers(startTimingMethod, endTimingMethod);
-
-                bool isStatic = classDeclaration.Modifiers.Any(modifier => modifier.IsKind(SyntaxKind.StaticKeyword));
-                bool inheritsFromBaseClass = classDeclaration.BaseList?.Types
-                    .Any(baseType => baseType.ToString() == "UdonSharpBehaviour") ?? false;
-                if (!isStatic && inheritsFromBaseClass)
-                    node = root.ReplaceNode(classDeclaration, newClassDeclaration);
-
-                //Debug.Log(node.ToFullString());
+                var classDeclaration = root.DescendantNodes().OfType<ClassDeclarationSyntax>().FirstOrDefault();
+                if (classDeclaration != null) {
+                    var newClassDeclaration = classDeclaration.AddMembers(startTimingMethod, endTimingMethod);
+                    bool isStatic = classDeclaration.Modifiers.Any(modifier => modifier.IsKind(SyntaxKind.StaticKeyword));
+                    bool inheritsFromBaseClass = classDeclaration.BaseList?.Types
+                        .Any(baseType => baseType.ToString() == "UdonSharpBehaviour") ?? false;
+                    if (!isStatic && inheritsFromBaseClass)
+                        node = root.ReplaceNode(classDeclaration, newClassDeclaration);
+                }
             }
 
             {
