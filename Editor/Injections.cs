@@ -11,16 +11,9 @@ using Debug = UnityEngine.Debug;
 namespace UdonSharpProfiler {
     [InitializeOnLoad]
     public static class Injections {
-        
-        
-        public static Assembly UdonSharpAssembly = typeof(UdonSharpCompilerV1).Assembly;
-
         internal static Harmony _harmony;
 
         static Injections() {
-            
-            var readMethod = UdonSharpAssembly.GetType("UdonSharp.UdonSharpUtils").GetMethod("ReadFileTextSync");
-            
             if (_harmony == null)
                 _harmony = new Harmony("UdonSharpProfiler.DeltaNeverUsed.patch");
             

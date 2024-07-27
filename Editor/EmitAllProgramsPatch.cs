@@ -9,6 +9,10 @@ using VRC.SDK3.Data;
 
 namespace UdonSharpProfiler {
     public static class EmitAllProgramsPatch {
+        /// <summary>
+        /// Creates a new Udon Variable
+        /// </summary>
+        /// <returns>Code to inject</returns>
         private static List<CodeInstruction> AddUdonReflVars(string key, Type instanceType, bool createNewInstance) {
             var emitContextType = ReflectionHelper.ByName("UdonSharp.Compiler.Emit.EmitContext");
             var valueTableType = ReflectionHelper.ByName("UdonSharp.Compiler.Emit.ValueTable");
@@ -16,30 +20,21 @@ namespace UdonSharpProfiler {
             var typeSymbolType = ReflectionHelper.ByName("UdonSharp.Compiler.Symbols.TypeSymbol");
 
             var codeList = new List<CodeInstruction> {
-                new CodeInstruction(OpCodes.Ldloc_3),
-                new CodeInstruction(OpCodes.Callvirt,
-                    emitContextType.GetProperty("RootTable").GetGetMethod()),
-                new CodeInstruction(OpCodes.Ldstr, key),
-                new CodeInstruction(OpCodes.Ldloc_3),
-                new CodeInstruction(OpCodes.Ldtoken, instanceType),
-                new CodeInstruction(OpCodes.Call,
-                    typeof(Type).GetMethod("GetTypeFromHandle", new[] { typeof(RuntimeTypeHandle) })),
-                new CodeInstruction(OpCodes.Callvirt,
-                    ReflectionHelper.GetMethod(phaseContextType, "GetTypeSymbol", new[] { typeof(Type) },
-                        BindingFlags.Public | BindingFlags.Instance)),
+                new(OpCodes.Ldloc_3),
+                new(OpCodes.Callvirt                        , emitContextType.GetProperty("RootTable").GetGetMethod()),
+                new(OpCodes.Ldstr                           , key),
+                new(OpCodes.Ldloc_3),
+                new(OpCodes.Ldtoken                         , instanceType),
+                new(OpCodes.Call                            , typeof(Type).GetMethod("GetTypeFromHandle", new[] { typeof(RuntimeTypeHandle) })),
+                new(OpCodes.Callvirt, ReflectionHelper.GetMethod(phaseContextType, "GetTypeSymbol", new[] { typeof(Type) }, BindingFlags.Public | BindingFlags.Instance)),
                 createNewInstance // Create new instance or null
-                    ? new CodeInstruction(OpCodes.Newobj,
-                        ReflectionHelper.GetConstructor(instanceType, Type.EmptyTypes,
-                            BindingFlags.Public | BindingFlags.Instance))
-                    : new CodeInstruction(OpCodes.Ldnull),
-                new CodeInstruction(OpCodes.Callvirt,
-                    ReflectionHelper.GetMethod(valueTableType, "CreateReflectionValue",
-                        new[] { typeof(string), typeSymbolType, typeof(object) },
-                        BindingFlags.Public | BindingFlags.Instance)),
-                new CodeInstruction(OpCodes.Pop)
+                    ? new CodeInstruction(OpCodes.Newobj    , ReflectionHelper.GetConstructor(instanceType, Type.EmptyTypes, BindingFlags.Public | BindingFlags.Instance))
+                    : new CodeInstruction(OpCodes.Ldnull)   ,
+                new(OpCodes.Callvirt                        , ReflectionHelper.GetMethod(valueTableType, "CreateReflectionValue", new[] { typeof(string), typeSymbolType, typeof(object) }, BindingFlags.Public | BindingFlags.Instance)),
+                new(OpCodes.Pop)
             };
 
-            return codeList; //
+            return codeList;
         }
 
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) {

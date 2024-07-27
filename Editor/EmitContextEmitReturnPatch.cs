@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace UdonSharpProfiler {
+﻿namespace UdonSharpProfiler {
     public static class EmitContextEmitReturnPatch {
         public static void Prefix(ref object __instance) {
             var instanceType = __instance.GetType();

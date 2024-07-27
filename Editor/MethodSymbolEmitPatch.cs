@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using Microsoft.CodeAnalysis;
-using UnityEngine;
 
 namespace UdonSharpProfiler {
     public static class MethodSymbolEmitPatch {
@@ -40,14 +39,14 @@ namespace UdonSharpProfiler {
             }
 
             if (targetIndex == -1) {
-                Debug.LogError("Failed to find place to inject timing start call");
+                Injections.PrintError("Failed to find place to inject timing start call");
                 return originalCodes;
             }
 
             var targetMethod = typeof(MethodSymbolEmitPatch).GetMethod("InjectStartTiming");
-            codes.Insert(targetIndex, new CodeInstruction(OpCodes.Ldarg_0));
-            codes.Insert(targetIndex + 1, new CodeInstruction(OpCodes.Ldarg_1));
-            codes.Insert(targetIndex + 2, new CodeInstruction(OpCodes.Callvirt, targetMethod));
+            codes.Insert(targetIndex         , new(OpCodes.Ldarg_0));
+            codes.Insert(targetIndex + 1, new(OpCodes.Ldarg_1));
+            codes.Insert(targetIndex + 2, new(OpCodes.Callvirt, targetMethod));
 
             return codes;
         }
@@ -67,18 +66,14 @@ namespace UdonSharpProfiler {
 
                 // Set function name
                 module.AddPush(udonTarget);
-                module.AddPush(module.GetConstantValue(context, typeof(string),
-                    UdonProfilerConsts.StopwatchNameKey));
-                module.AddPush(module.GetConstantValue(context, typeof(string),
-                    roslynSymbol.ToDisplayString().Replace("\n", "").Replace("\r", "")));
-                module.AddExtern(context,
-                    "VRCUdonCommonInterfacesIUdonEventReceiver.__SetProgramVariable__SystemString_SystemObject__SystemVoid");
+                module.AddPush(module.GetConstantValue(context, typeof(string), UdonProfilerConsts.StopwatchNameKey));
+                module.AddPush(module.GetConstantValue(context, typeof(string), roslynSymbol.ToDisplayString().Replace("\n", "").Replace("\r", "")));
+                module.AddExtern(context                                      , "VRCUdonCommonInterfacesIUdonEventReceiver.__SetProgramVariable__SystemString_SystemObject__SystemVoid");
 
                 // Call start profiling
                 module.AddPush(udonTarget);
                 module.AddPush(module.GetConstantValue(context, typeof(string), "Profiler_StartTiming"));
-                module.AddExtern(context,
-                    "VRCUdonCommonInterfacesIUdonEventReceiver.__SendCustomEvent__SystemString__SystemVoid");
+                module.AddExtern(context                                      , "VRCUdonCommonInterfacesIUdonEventReceiver.__SendCustomEvent__SystemString__SystemVoid");
 
                 module.AddCommentTag("Injected Start Call End");
             }

@@ -1,16 +1,15 @@
 ﻿using VRC.SDK3.Data;
-using Random = UnityEngine.Random;
 
 namespace UdonSharpProfiler {
     public enum PerfettoTrackEventType {
         TYPE_SLICE_BEGIN,
         TYPE_SLICE_END,
-        
+
         TYPE_SLICE_COMPLETE,
-        
+
         TYPE_INSTANT,
     }
-    
+
     public static class PerfettoHelper {
         private static string PerfettoTrackEventTypeToString(this PerfettoTrackEventType eventType) {
             switch (eventType) {
@@ -26,7 +25,7 @@ namespace UdonSharpProfiler {
 
             return "";
         }
-        
+
         public static DataDictionary CreatePacket() {
             var packet = new DataDictionary();
             return packet;
@@ -36,7 +35,7 @@ namespace UdonSharpProfiler {
             packet.Add("ts", ticks);
             return packet;
         }
-        
+
         public static DataDictionary AddDuration(this DataDictionary packet, long ticks) {
             packet.Add("dur", ticks);
             return packet;
@@ -51,7 +50,7 @@ namespace UdonSharpProfiler {
             packet.Add("ph", eventType.PerfettoTrackEventTypeToString());
             return packet;
         }
-        
+
         public static DataDictionary AddEventName(this DataDictionary packet, string eventName) {
             packet.Add("name", eventName);
             return packet;
@@ -60,7 +59,7 @@ namespace UdonSharpProfiler {
         public static DataDictionary AddIds(this DataDictionary packet) {
             packet.Add("pid", 1);
             packet.Add("tid", 1);
-        
+
             return packet;
         }
     }
