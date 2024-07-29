@@ -1,0 +1,14 @@
+{
+  "name": "deltaneverused.udonsharpprofiler",
+  "displayName": "UdonSharp Profiler",
+  "version": "0.0.1",
+  "unity": "2022.3",
+  "description": "Tool for profiling U# scripts",
+  "vpmDependencies": {
+    "com.vrchat.worlds": "^3.6.x"
+  },
+  "author": {
+    "name": "DeltaNeverUsed",
+    "email": "sinus06@hotmail.com"
+  }
+}
