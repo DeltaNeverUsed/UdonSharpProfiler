@@ -18,7 +18,7 @@ namespace UdonSharpProfiler {
         private void EmitStartEvent(string name) {
             _profilerDataReader.Emit(PerfettoHelper.CreatePacket()
                 .AddEventName(name)
-                .AddTimeStamp(Stopwatch.GetTimestamp() / Stopwatch.Frequency * 1000000)
+                .AddTimeStamp((long)((double)Stopwatch.GetTimestamp() / Stopwatch.Frequency * 1000000d))
                 .AddEventType(PerfettoTrackEventType.TYPE_SLICE_BEGIN)
                 .AddIds());
         }
