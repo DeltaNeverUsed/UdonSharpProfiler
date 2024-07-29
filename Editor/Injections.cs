@@ -12,11 +12,22 @@ namespace UdonSharpProfiler {
     [InitializeOnLoad]
     public static class Injections {
         internal static Harmony _harmony;
+        
+        private const string MenuName = "Tools/UdonSharpProfiler/Enabled";
+
+        private static bool _enabled;
 
         static Injections() {
-            if (_harmony == null)
-                _harmony = new Harmony("UdonSharpProfiler.DeltaNeverUsed.patch");
+            _enabled = EditorPrefs.GetBool(MenuName, false);
             
+            Toggle(_enabled);
+        }
+
+        private static void Unpatch() {
+            _harmony.UnpatchAll();
+        }
+
+        private static void Patch() {
             _harmony.UnpatchAll();
             _harmony.PatchAll();
             
@@ -66,6 +77,29 @@ namespace UdonSharpProfiler {
                 var prefixMethod = typeof(EmitContextEmitReturnPatch).GetMethod(nameof(EmitContextEmitReturnPatch.Prefix), BindingFlags.Static | BindingFlags.Public);
                 _harmony.Patch(emitReturnMethod, prefix: new HarmonyMethod(prefixMethod));
             }
+        }
+
+        [MenuItem(MenuName)]
+        public static void ToggleProfiler() {
+            Toggle(!_enabled);
+            UdonSharpCompilerV1.Compile(new UdonSharpCompileOptions() { IsEditorBuild = true });
+        }
+
+        private static void Toggle(bool value) {
+            if (_harmony == null)
+                _harmony = new Harmony("UdonSharpProfiler.DeltaNeverUsed.patch");
+            
+            EditorApplication.delayCall += () => { 
+                Menu.SetChecked(MenuName, value);
+                EditorPrefs.SetBool(MenuName, value);
+            };
+
+            _enabled = value;
+            
+            if (value)
+                Patch();
+            else
+                Unpatch();
         }
 
         public static void PrintError(object message) {
