@@ -22,10 +22,10 @@ namespace UdonSharpProfiler {
                 SyntaxFactory.ParseStatement(
                     @"{
 var fakeSelf = (UdonSharp.UdonSharpBehaviour)GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchSelfKey);
-var root = (VRC.SDK3.Data.DataDictionary)fakeSelf.GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchHeapKey);
-var parent = (VRC.SDK3.Data.DataDictionary)fakeSelf.GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchHeapParentKey);
+var root = (Profiler_Data.DataDictionary)fakeSelf.GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchHeapKey);
+var parent = (Profiler_Data.DataDictionary)fakeSelf.GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchHeapParentKey);
 
-var info = new VRC.SDK3.Data.DataDictionary();
+var info = new Profiler_Data.DataDictionary();
 
 var name = (string)GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchNameKey);
 
@@ -33,9 +33,9 @@ info.Add(""parent"", parent);
 info.Add(""name"", name);
 info.Add(""start"", System.Diagnostics.Stopwatch.GetTimestamp());
 info.Add(""end"", (long)0);
-info.Add(""children"", new VRC.SDK3.Data.DataList());
+info.Add(""children"", new Profiler_Data.DataList());
 
-if (VRC.SDKBase.Utilities.IsValid(parent)){
+if (Profiler_Utilities.IsValid(parent)){
     parent[""children""].DataList.Add(info);
 }
 else {
@@ -61,10 +61,10 @@ fakeSelf.SetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchHeapPa
                 SyntaxFactory.ParseStatement(
                     @"{
 var fakeSelf = (UdonSharp.UdonSharpBehaviour)GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchSelfKey);
-var parent = (VRC.SDK3.Data.DataDictionary)fakeSelf.GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchHeapParentKey);
-if (VRC.SDKBase.Utilities.IsValid(parent)) {
+var parent = (Profiler_Data.DataDictionary)fakeSelf.GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchHeapParentKey);
+if (Profiler_Utilities.IsValid(parent)) {
     parent[""end""] = System.Diagnostics.Stopwatch.GetTimestamp();
-    if (parent.TryGetValue(""parent"", VRC.SDK3.Data.TokenType.DataDictionary, out var value)) {
+    if (parent.TryGetValue(""parent"", Profiler_Data.TokenType.DataDictionary, out var value)) {
         fakeSelf.SetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchHeapParentKey, value.DataDictionary);
     } else {
         fakeSelf.SetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchHeapParentKey, null);
@@ -78,6 +78,18 @@ if (VRC.SDKBase.Utilities.IsValid(parent)) {
                 _root = node as CompilationUnitSyntax;
 
                 if (_root != null) {
+                    UsingDirectiveSyntax dataDictAlias = SyntaxFactory.UsingDirective(
+                            SyntaxFactory.NameEquals(SyntaxFactory.IdentifierName("Profiler_Data")),
+                            SyntaxFactory.ParseName("VRC.SDK3.Data"))
+                        .WithTrailingTrivia(SyntaxFactory.ElasticCarriageReturnLineFeed);
+
+                    UsingDirectiveSyntax utilitiesAlias = SyntaxFactory.UsingDirective(
+                            SyntaxFactory.NameEquals(SyntaxFactory.IdentifierName("Profiler_Utilities")),
+                            SyntaxFactory.ParseName("VRC.SDKBase.Utilities"))
+                        .WithTrailingTrivia(SyntaxFactory.ElasticCarriageReturnLineFeed);
+
+                    _root = _root.AddUsings(dataDictAlias, utilitiesAlias);
+                    
                     // Inject timing functions into the base classes
                     var classDeclarations = _root.DescendantNodes().OfType<ClassDeclarationSyntax>();
 
