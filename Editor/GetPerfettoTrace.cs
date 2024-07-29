@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using File = System.IO.File;
@@ -51,6 +52,32 @@ namespace UdonSharpProfiler {
 
             SaveTrace(logContent.Substring(traceIndex,
                 logContent.IndexOf("\n", traceIndex, StringComparison.Ordinal) - traceIndex));
+        }
+
+        [MenuItem("Tools/UdonSharpProfiler/Save VRChat Log")]
+        public static void GetVRChatLog() {
+            var vrchatLogFolder = new DirectoryInfo(Directory.GetParent(Application.persistentDataPath).Parent +
+                                  "\\VRChat\\VRChat");
+            var latestLog = vrchatLogFolder.GetFiles()
+                .OrderByDescending(f => f.LastWriteTime)
+                .First();
+
+            string logContent;
+            using (var file = File.Open(latestLog.ToString(), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var reader = new StreamReader(file)) {
+                logContent = reader.ReadToEnd();
+            }
+
+            var traceIndex = logContent.LastIndexOf("{  \"traceEvents\": ", StringComparison.Ordinal);
+
+            if (traceIndex == -1) {
+                Injections.PrintError("Perfetto log not found.");
+                return;
+            }
+
+            SaveTrace(logContent.Substring(traceIndex,
+                logContent.IndexOf("\n", traceIndex, StringComparison.Ordinal) - traceIndex));
+
         }
     }
 }

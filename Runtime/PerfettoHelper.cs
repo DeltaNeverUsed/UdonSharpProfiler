@@ -11,6 +11,7 @@ namespace UdonSharpProfiler {
     }
 
     public static class PerfettoHelper {
+        [DontUdonProfile]
         private static string PerfettoTrackEventTypeToString(this PerfettoTrackEventType eventType) {
             switch (eventType) {
                 case PerfettoTrackEventType.TYPE_SLICE_BEGIN:
@@ -26,36 +27,43 @@ namespace UdonSharpProfiler {
             return "";
         }
 
+        [DontUdonProfile]
         public static DataDictionary CreatePacket() {
             var packet = new DataDictionary();
             return packet;
         }
 
+        [DontUdonProfile]
         public static DataDictionary AddTimeStamp(this DataDictionary packet, long ticks) {
             packet.Add("ts", ticks);
             return packet;
         }
 
+        [DontUdonProfile]
         public static DataDictionary AddDuration(this DataDictionary packet, long ticks) {
             packet.Add("dur", ticks);
             return packet;
         }
 
+        [DontUdonProfile]
         public static DataDictionary AdjustTimeStamp(this DataDictionary packet, long min) {
             packet["ts"] = packet["ts"].Long - min;
             return packet;
         }
 
+        [DontUdonProfile]
         public static DataDictionary AddEventType(this DataDictionary packet, PerfettoTrackEventType eventType) {
             packet.Add("ph", eventType.PerfettoTrackEventTypeToString());
             return packet;
         }
 
+        [DontUdonProfile]
         public static DataDictionary AddEventName(this DataDictionary packet, string eventName) {
             packet.Add("name", eventName);
             return packet;
         }
 
+        [DontUdonProfile]
         public static DataDictionary AddIds(this DataDictionary packet) {
             packet.Add("pid", 1);
             packet.Add("tid", 1);

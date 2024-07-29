@@ -6,17 +6,17 @@ using VRC.SDKBase;
 namespace UdonSharpProfiler {
     [DefaultExecutionOrder(-1000000000)]
     public class UdonProfilerKickoff : UdonSharpBehaviour {
-        private ProfileDataReader _profileDataReader;
+        private ProfilerDataReader _profilerDataReader;
 
         [DontUdonProfile]
         private void Start() {
-            if (!Utilities.IsValid(_profileDataReader))
-                _profileDataReader = GetComponent<ProfileDataReader>();
+            if (!Utilities.IsValid(_profilerDataReader))
+                _profilerDataReader = GetComponent<ProfilerDataReader>();
         }
 
         [DontUdonProfile]
         private void EmitStartEvent(string name) {
-            _profileDataReader.Emit(PerfettoHelper.CreatePacket()
+            _profilerDataReader.Emit(PerfettoHelper.CreatePacket()
                 .AddEventName(name)
                 .AddTimeStamp(Stopwatch.GetTimestamp() / Stopwatch.Frequency * 1000000)
                 .AddEventType(PerfettoTrackEventType.TYPE_SLICE_BEGIN)
