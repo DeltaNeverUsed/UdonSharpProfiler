@@ -53,8 +53,8 @@ namespace UdonSharpProfiler {
         /// Creates DataDict(s) in the form of a Perfetto packet(s) and adds it to the _packets DataList recursively 
         /// </summary>
         /// <param name="node">Packets from the object's profiling dict</param>
-        [RecursiveMethod, DontUdonProfile]
-        private void EmitTree(DataDictionary node) {
+        [DontUdonProfile]
+        private void EmitPacket(DataDictionary node) {
             var start = (long)((double)node["start"].Long / Stopwatch.Frequency * 1000000d); // in microseconds
             var end = (long)((double)node["end"].Long / Stopwatch.Frequency * 1000000d); // in microseconds
             var functionName = node["name"].String;
@@ -65,13 +65,6 @@ namespace UdonSharpProfiler {
                 .AddDuration(end - start)
                 .AddEventType(PerfettoTrackEventType.TYPE_SLICE_COMPLETE)
                 .AddIds());
-
-            // Get the children
-            var children = node["children"].DataList.ToArray();
-            foreach (var child in children) {
-                // Repeat on that child
-                EmitTree(child.DataDictionary);
-            }
         }
 
         [DontUdonProfile]
@@ -88,16 +81,16 @@ namespace UdonSharpProfiler {
 
                 if (recording) {
                     // Get every called function from the "root" or for example: Update, Start, or input events
-                    var root = (DataDictionary)target.GetProgramVariable(UdonProfilerConsts.StopwatchHeapKey);
-                    var keys = root.GetKeys().ToArray();
+                    var root = (DataList)target.GetProgramVariable(UdonProfilerConsts.StopwatchListKey);
+                    var unformattedPackets = root.ToArray();
 
-                    foreach (var key in keys) {
-                        EmitTree(root[key].DataDictionary);
+                    foreach (var unformattedPacket in unformattedPackets) {
+                        EmitPacket(unformattedPacket.DataDictionary);
                     }
                 }
 
                 // Reset Dict after getting it
-                target.SetProgramVariable(UdonProfilerConsts.StopwatchHeapKey, new DataDictionary());
+                target.SetProgramVariable(UdonProfilerConsts.StopwatchListKey, new DataList());
             }
             
             Emit(PerfettoHelper.CreatePacket()

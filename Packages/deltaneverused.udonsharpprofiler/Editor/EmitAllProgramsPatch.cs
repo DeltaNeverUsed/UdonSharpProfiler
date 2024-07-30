@@ -63,14 +63,14 @@ namespace UdonSharpProfiler {
 
             codes.InsertRange(
                 paramInsertIndex,
-                AddUdonReflVars(UdonProfilerConsts.StopwatchHeapKey, typeof(DataDictionary), true)
-            );
-
-            codes.InsertRange(
-                paramInsertIndex,
-                AddUdonReflVars(UdonProfilerConsts.StopwatchHeapParentKey, typeof(DataDictionary), false)
+                AddUdonReflVars(UdonProfilerConsts.StopwatchListKey, typeof(DataList), true)
             );
             
+            codes.InsertRange(
+                paramInsertIndex,
+                AddUdonReflVars(UdonProfilerConsts.StopwatchParentKey, typeof(DataDictionary), false)
+            );
+
             codes.InsertRange(
                 paramInsertIndex,
                 AddUdonReflVars(UdonProfilerConsts.StopwatchSelfKey, typeof(UdonSharpBehaviour), false)

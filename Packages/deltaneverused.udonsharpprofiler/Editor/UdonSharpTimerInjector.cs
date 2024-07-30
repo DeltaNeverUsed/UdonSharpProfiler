@@ -22,28 +22,21 @@ namespace UdonSharpProfiler {
                 SyntaxFactory.ParseStatement(
                     @"{
 var fakeSelf = (UdonSharp.UdonSharpBehaviour)GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchSelfKey);
-var root = (Profiler_Data.DataDictionary)fakeSelf.GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchHeapKey);
-var parent = (Profiler_Data.DataDictionary)fakeSelf.GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchHeapParentKey);
+var list = (Profiler_Data.DataList)fakeSelf.GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchListKey);
+var parent = (Profiler_Data.DataDictionary)fakeSelf.GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchParentKey);
 
 var info = new Profiler_Data.DataDictionary();
-
 var name = (string)GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchNameKey);
 
 info.Add(""parent"", parent);
 info.Add(""name"", name);
 info.Add(""start"", System.Diagnostics.Stopwatch.GetTimestamp());
 info.Add(""end"", (long)0);
-info.Add(""children"", new Profiler_Data.DataList());
 
-if (Profiler_Utilities.IsValid(parent)){
-    parent[""children""].DataList.Add(info);
-}
-else {
-    root[name] = info;
-}
+list.Add(info);
 
-fakeSelf.SetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchHeapKey, root);
-fakeSelf.SetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchHeapParentKey, info);
+fakeSelf.SetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchListKey, list);
+fakeSelf.SetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchParentKey, info);
 }")
             ));
 
@@ -61,13 +54,13 @@ fakeSelf.SetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchHeapPa
                 SyntaxFactory.ParseStatement(
                     @"{
 var fakeSelf = (UdonSharp.UdonSharpBehaviour)GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchSelfKey);
-var parent = (Profiler_Data.DataDictionary)fakeSelf.GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchHeapParentKey);
+var parent = (Profiler_Data.DataDictionary)fakeSelf.GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchParentKey);
 if (Profiler_Utilities.IsValid(parent)) {
     parent[""end""] = System.Diagnostics.Stopwatch.GetTimestamp();
     if (parent.TryGetValue(""parent"", Profiler_Data.TokenType.DataDictionary, out var value)) {
-        fakeSelf.SetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchHeapParentKey, value.DataDictionary);
+        fakeSelf.SetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchParentKey, value.DataDictionary);
     } else {
-        fakeSelf.SetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchHeapParentKey, null);
+        fakeSelf.SetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchParentKey, null);
     }
 }}")
             ));
