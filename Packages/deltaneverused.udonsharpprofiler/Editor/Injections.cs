@@ -24,13 +24,15 @@ namespace UdonSharpProfiler {
         }
 
         private static void Unpatch() {
-            _harmony.UnpatchAll();
+            _harmony.UnpatchAll("UdonSharpProfiler.DeltaNeverUsed.patch");
         }
 
         private static void Patch() {
-            _harmony.UnpatchAll();
+            _harmony.UnpatchAll("UdonSharpProfiler.DeltaNeverUsed.patch");
             _harmony.PatchAll();
             
+            
+
             var lambdaMethod = typeof(UdonSharpCompilerV1).GetNestedTypes(BindingFlags.NonPublic | BindingFlags.Instance)
                 .SelectMany(t => t.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance))
                 .FirstOrDefault(m => m.Name.Contains("<EmitAllPrograms>b__0"));
@@ -39,31 +41,28 @@ namespace UdonSharpProfiler {
                 var transpilerMethod = typeof(EmitAllProgramsPatch).GetMethod(nameof(EmitAllProgramsPatch.Transpiler), BindingFlags.Static | BindingFlags.Public);
                 _harmony.Patch(lambdaMethod, transpiler: new HarmonyMethod(transpilerMethod));
             }
-            
-            
+
             var compileMethodParameters = new Type[] {
                 ReflectionHelper.ByName("UdonSharp.Compiler.CompilationContext"),
                 typeof(IReadOnlyDictionary<,>).MakeGenericType(typeof(string), ReflectionHelper.ByName("UdonSharp.Compiler.UdonSharpCompilerV1/ProgramAssetInfo")),
                 typeof(IEnumerable<string>),
                 typeof(string[])
             };
-            
+
             var compileMethod = typeof(UdonSharpCompilerV1).GetMethod("Compile", BindingFlags.NonPublic | BindingFlags.Static, null, compileMethodParameters, null);
             if (compileMethod != null) {
                 var transpilerMethod = typeof(CompilePatch).GetMethod(nameof(CompilePatch.Transpiler), BindingFlags.Static | BindingFlags.Public);
                 _harmony.Patch(compileMethod, transpiler: new HarmonyMethod(transpilerMethod));
             }
-            
+
             var getDeclarationStrMethod = ReflectionHelper.GetMethod(ReflectionHelper.ByName("UdonSharp.Compiler.Emit.Value"), "GetDeclarationStr", Type.EmptyTypes, BindingFlags.Public | BindingFlags.Instance);
             if (getDeclarationStrMethod != null) {
                 var postfixMethod = typeof(GetDeclarationStrPatch).GetMethod(nameof(GetDeclarationStrPatch.Postfix), BindingFlags.Static | BindingFlags.Public);
                 _harmony.Patch(getDeclarationStrMethod, postfix: new HarmonyMethod(postfixMethod));
             }
 
-            
             var methodSymbolEmitMethod = ReflectionHelper.ByName("UdonSharp.Compiler.Symbols.MethodSymbol")
                 .GetMethod("Emit", BindingFlags.Public | BindingFlags.Instance);
-            
             if (methodSymbolEmitMethod != null) {
                 var prefixMethod = typeof(MethodSymbolEmitPatch).GetMethod(nameof(MethodSymbolEmitPatch.Prefix), BindingFlags.Static | BindingFlags.Public);
                 var postfixMethod = typeof(MethodSymbolEmitPatch).GetMethod(nameof(MethodSymbolEmitPatch.PostFix), BindingFlags.Static | BindingFlags.Public);
@@ -72,7 +71,6 @@ namespace UdonSharpProfiler {
             }
             
             var emitReturnMethod = ReflectionHelper.GetMethod(ReflectionHelper.ByName("UdonSharp.Compiler.Emit.EmitContext"), "EmitReturn", Type.EmptyTypes, BindingFlags.Public | BindingFlags.Instance);
-            
             if (emitReturnMethod != null) {
                 var prefixMethod = typeof(EmitContextEmitReturnPatch).GetMethod(nameof(EmitContextEmitReturnPatch.Prefix), BindingFlags.Static | BindingFlags.Public);
                 _harmony.Patch(emitReturnMethod, prefix: new HarmonyMethod(prefixMethod));
@@ -86,8 +84,7 @@ namespace UdonSharpProfiler {
         }
 
         private static void Toggle(bool value) {
-            if (_harmony == null)
-                _harmony = new Harmony("UdonSharpProfiler.DeltaNeverUsed.patch");
+            _harmony ??= new Harmony("UdonSharpProfiler.DeltaNeverUsed.patch");
             
             EditorApplication.delayCall += () => { 
                 Menu.SetChecked(MenuName, value);
