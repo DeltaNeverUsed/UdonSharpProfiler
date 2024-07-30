@@ -25,6 +25,7 @@ namespace UdonSharpProfiler {
 
                 var roots = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
                 t.targets = roots.SelectMany(root => root.GetComponentsInChildren<UdonSharpBehaviour>(true)).Where(x => !blacklisted.Contains(x.GetType())).ToArray();
+                EditorUtility.SetDirty(target);
             }
         }
     }
