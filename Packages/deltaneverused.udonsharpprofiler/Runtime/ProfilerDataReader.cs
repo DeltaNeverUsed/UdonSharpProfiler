@@ -20,7 +20,7 @@ namespace UdonSharpProfiler {
             DrawDefaultInspector();
 
             if (GUILayout.Button("Get All U# Behaviours")) {
-                var blacklisted = new Type[] {typeof(ProfilerDataReader), typeof(UdonProfilerKickoff)};
+                var blacklisted = new Type[] {typeof(ProfilerDataReader), typeof(UdonProfilerKickoff), typeof(ProfilerController)};
                 var t = (ProfilerDataReader)target;
 
                 var roots = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
@@ -121,6 +121,7 @@ namespace UdonSharpProfiler {
 
             VRCJson.TrySerializeToJson(_packets, JsonExportType.Minify, out var result);
             Debug.Log($"{{  \"traceEvents\": {result}, \"displayTimeUnit\": \"us\" }}");
+            _packets = new DataList();
         }
 
         [DontUdonProfile]
