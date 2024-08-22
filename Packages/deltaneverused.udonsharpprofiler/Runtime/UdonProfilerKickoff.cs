@@ -15,27 +15,18 @@ namespace UdonSharpProfiler {
         }
 
         [DontUdonProfile]
-        private void EmitStartEvent(string name) {
-            _profilerDataReader.Emit(PerfettoHelper.CreatePacket()
-                .AddEventName(name)
-                .AddTimeStamp((long)((double)Stopwatch.GetTimestamp() / Stopwatch.Frequency * 1000000d))
-                .AddEventType(PerfettoTrackEventType.TYPE_SLICE_BEGIN)
-                .AddIds());
-        }
-
-        [DontUdonProfile]
         private void FixedUpdate() {
-            EmitStartEvent("Udon FixedUpdate()");
+            _profilerDataReader.EmitStartEvent("Udon FixedUpdate()");
         }
 
         [DontUdonProfile]
         private void Update() {
-            EmitStartEvent("Udon Update()");
+            _profilerDataReader.EmitStartEvent("Udon Update()");
         }
 
         [DontUdonProfile]
         private void LateUpdate() {
-            EmitStartEvent("Udon LateUpdate()");
+            _profilerDataReader.EmitStartEvent("Udon LateUpdate()");
         }
     }
 }

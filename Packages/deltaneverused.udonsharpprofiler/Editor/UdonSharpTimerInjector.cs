@@ -32,6 +32,7 @@ info.Add(""parent"", parent);
 info.Add(""name"", name);
 info.Add(""start"", System.Diagnostics.Stopwatch.GetTimestamp());
 info.Add(""end"", (long)0);
+info.Add(""type"", (int)UdonSharpProfiler.ProfilerEventType.FunctionCall);
 
 list.Add(info);
 

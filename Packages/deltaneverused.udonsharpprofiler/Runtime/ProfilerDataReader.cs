@@ -20,11 +20,13 @@ namespace UdonSharpProfiler {
             DrawDefaultInspector();
 
             if (GUILayout.Button("Get All U# Behaviours")) {
-                var blacklisted = new Type[] {typeof(ProfilerDataReader), typeof(UdonProfilerKickoff), typeof(ProfilerController)};
+                var blacklisted = new Type[]
+                    { typeof(ProfilerDataReader), typeof(UdonProfilerKickoff), typeof(ProfilerController) };
                 var t = (ProfilerDataReader)target;
 
                 var roots = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
-                t.targets = roots.SelectMany(root => root.GetComponentsInChildren<UdonSharpBehaviour>(true)).Where(x => !blacklisted.Contains(x.GetType())).ToArray();
+                t.targets = roots.SelectMany(root => root.GetComponentsInChildren<UdonSharpBehaviour>(true))
+                    .Where(x => !blacklisted.Contains(x.GetType())).ToArray();
                 EditorUtility.SetDirty(target);
             }
         }
@@ -56,25 +58,40 @@ namespace UdonSharpProfiler {
         [DontUdonProfile]
         private void EmitPacket(DataDictionary node) {
             var start = (long)((double)node["start"].Long / Stopwatch.Frequency * 1000000d); // in microseconds
-            var end = (long)((double)node["end"].Long / Stopwatch.Frequency * 1000000d); // in microseconds
             var functionName = node["name"].String;
+            var type = (ProfilerEventType)node["type"].Int;
 
-            Emit(PerfettoHelper.CreatePacket()
-                .AddEventName(functionName)
-                .AddTimeStamp(start)
-                .AddDuration(end - start)
-                .AddEventType(PerfettoTrackEventType.TYPE_SLICE_COMPLETE)
-                .AddIds());
+            switch (type) {
+                case ProfilerEventType.FunctionCall:
+                    var end = (long)((double)node["end"].Long / Stopwatch.Frequency * 1000000d); // in microseconds
+                    Emit(PerfettoHelper.CreatePacket()
+                        .AddEventName(functionName)
+                        .AddTimeStamp(start)
+                        .AddDuration(end - start)
+                        .AddEventType(PerfettoTrackEventType.TYPE_SLICE_COMPLETE)
+                        .AddIds());
+                    break;
+                case ProfilerEventType.Instant:
+                    Emit(PerfettoHelper.CreatePacket()
+                        .AddEventName(functionName)
+                        .AddTimeStamp(start)
+                        .AddEventType(PerfettoTrackEventType.TYPE_INSTANT)
+                        .AddIds());
+                    break;
+                default:
+                    break;
+            }
         }
 
         [DontUdonProfile]
         public override void PostLateUpdate() {
-            Emit(PerfettoHelper.CreatePacket()
-                .AddEventName("Profiler Emit")
-                .AddTimeStamp((long)((double)Stopwatch.GetTimestamp() / Stopwatch.Frequency * 1000000d))
-                .AddEventType(PerfettoTrackEventType.TYPE_SLICE_BEGIN)
-                .AddIds());
-            
+            if (recording)
+                Emit(PerfettoHelper.CreatePacket()
+                    .AddEventName("Profiler Emit")
+                    .AddTimeStamp((long)((double)Stopwatch.GetTimestamp() / Stopwatch.Frequency * 1000000d))
+                    .AddEventType(PerfettoTrackEventType.TYPE_SLICE_BEGIN)
+                    .AddIds());
+
             foreach (var target in targets) {
                 if (!Utilities.IsValid(target))
                     continue;
@@ -92,12 +109,13 @@ namespace UdonSharpProfiler {
                 // Reset Dict after getting it
                 target.SetProgramVariable(UdonProfilerConsts.StopwatchListKey, new DataList());
             }
-            
-            Emit(PerfettoHelper.CreatePacket()
-                .AddEventName("Profiler Emit")
-                .AddTimeStamp((long)((double)Stopwatch.GetTimestamp() / Stopwatch.Frequency * 1000000d))
-                .AddEventType(PerfettoTrackEventType.TYPE_SLICE_END)
-                .AddIds());
+
+            if (recording)
+                Emit(PerfettoHelper.CreatePacket()
+                    .AddEventName("Profiler Emit")
+                    .AddTimeStamp((long)((double)Stopwatch.GetTimestamp() / Stopwatch.Frequency * 1000000d))
+                    .AddEventType(PerfettoTrackEventType.TYPE_SLICE_END)
+                    .AddIds());
         }
 
         /// <summary>
@@ -125,12 +143,23 @@ namespace UdonSharpProfiler {
         }
 
         [DontUdonProfile]
-        private void EmitEndEvent(string name) {
-            Emit(PerfettoHelper.CreatePacket()
-                .AddEventName(name)
-                .AddTimeStamp((long)((double)Stopwatch.GetTimestamp() / Stopwatch.Frequency * 1000000d))
-                .AddEventType(PerfettoTrackEventType.TYPE_SLICE_END)
-                .AddIds());
+        public void EmitStartEvent(string name) {
+            if (recording)
+                Emit(PerfettoHelper.CreatePacket()
+                    .AddEventName(name)
+                    .AddTimeStamp((long)((double)Stopwatch.GetTimestamp() / Stopwatch.Frequency * 1000000d))
+                    .AddEventType(PerfettoTrackEventType.TYPE_SLICE_BEGIN)
+                    .AddIds());
+        }
+
+        [DontUdonProfile]
+        public void EmitEndEvent(string name) {
+            if (recording)
+                Emit(PerfettoHelper.CreatePacket()
+                    .AddEventName(name)
+                    .AddTimeStamp((long)((double)Stopwatch.GetTimestamp() / Stopwatch.Frequency * 1000000d))
+                    .AddEventType(PerfettoTrackEventType.TYPE_SLICE_END)
+                    .AddIds());
         }
 
         [DontUdonProfile]
