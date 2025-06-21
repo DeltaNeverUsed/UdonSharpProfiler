@@ -48,16 +48,16 @@ namespace UdonSharpProfiler {
                 typeof(IEnumerable<string>),
                 typeof(string[])
             };
-            
-            var compileMethodParametersMerlin = new Type[] {
-                ReflectionHelper.ByName("UdonSharp.Compiler.CompilationContext"),
-                typeof(IReadOnlyDictionary<,>).MakeGenericType(typeof(string), ReflectionHelper.ByName("UdonSharp.Compiler.UdonSharpCompilerV1/ProgramAssetInfo")),
-                typeof(IEnumerable<>).MakeGenericType(ReflectionHelper.ByName("UdonSharp.Compiler.CompilationContext/ScriptAssembly"))
-            };
 
             var compileMethod = typeof(UdonSharpCompilerV1).GetMethod("Compile", BindingFlags.NonPublic | BindingFlags.Static, null, compileMethodParameters, null);
-            if (compileMethod == null)
+            if (compileMethod == null) {
+                var compileMethodParametersMerlin = new Type[] {
+                    ReflectionHelper.ByName("UdonSharp.Compiler.CompilationContext"),
+                    typeof(IReadOnlyDictionary<,>).MakeGenericType(typeof(string), ReflectionHelper.ByName("UdonSharp.Compiler.UdonSharpCompilerV1/ProgramAssetInfo")),
+                    typeof(IEnumerable<>).MakeGenericType(ReflectionHelper.ByName("UdonSharp.Compiler.CompilationContext/ScriptAssembly"))
+                };
                 compileMethod = typeof(UdonSharpCompilerV1).GetMethod("Compile", BindingFlags.NonPublic | BindingFlags.Static, null, compileMethodParametersMerlin, null);
+            }
             if (compileMethod != null) {
                 var transpilerMethod = typeof(CompilePatch).GetMethod(nameof(CompilePatch.Transpiler), BindingFlags.Static | BindingFlags.Public);
                 _harmony.Patch(compileMethod, transpiler: new HarmonyMethod(transpilerMethod));
