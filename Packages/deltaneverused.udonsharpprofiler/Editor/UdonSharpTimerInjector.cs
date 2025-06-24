@@ -1,7 +1,10 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using UnityEngine;
 
 namespace UdonSharpProfiler {
     public class UdonSharpTimerInjector : CSharpSyntaxRewriter {
@@ -21,23 +24,22 @@ namespace UdonSharpProfiler {
             .WithBody(SyntaxFactory.Block(
                 SyntaxFactory.ParseStatement(
                     @"{
-var fakeSelf = (UdonSharp.UdonSharpBehaviour)GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchSelfKey);
-var list = (Profiler_Data.DataList)fakeSelf.GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchListKey);
-var parent = (Profiler_Data.DataDictionary)fakeSelf.GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchParentKey);
+            if (__getProfilerDataReader) {
+                __profilerDataReader = UdonSharpProfiler.UdonProfilerConsts.GetComponentNonProfiled<UdonSharpProfiler.ProfilerDataReader>(UnityEngine.GameObject.Find(""Profiler""));
+                __getProfilerDataReader = !VRC.SDKBase.Utilities.IsValid(__profilerDataReader);
+                if (__getProfilerDataReader) {
+                    UnityEngine.Debug.LogError(""Couldn't find profiler in scene, make sure it's name is \""Profiler\"""");
+                    return;
+                }   
+            }
+            
+            VRC.SDK3.Data.DataDictionary info = new VRC.SDK3.Data.DataDictionary();
+            string functionName = (string)GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchNameKey);
 
-var info = new Profiler_Data.DataDictionary();
-var name = (string)GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchNameKey);
+            info.Add(""name"", functionName);
+            info.Add(""start"", System.Diagnostics.Stopwatch.GetTimestamp());
 
-info.Add(""parent"", parent);
-info.Add(""name"", name);
-info.Add(""start"", System.Diagnostics.Stopwatch.GetTimestamp());
-info.Add(""end"", (long)0);
-info.Add(""type"", (int)UdonSharpProfiler.ProfilerEventType.FunctionCall);
-
-list.Add(info);
-
-fakeSelf.SetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchListKey, list);
-fakeSelf.SetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchParentKey, info);
+            __profilerDataReader.QueuePacket(info);
 }")
             ));
 
@@ -54,53 +56,66 @@ fakeSelf.SetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchParent
             .WithBody(SyntaxFactory.Block(
                 SyntaxFactory.ParseStatement(
                     @"{
-var fakeSelf = (UdonSharp.UdonSharpBehaviour)GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchSelfKey);
-var parent = (Profiler_Data.DataDictionary)fakeSelf.GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchParentKey);
-if (Profiler_Utilities.IsValid(parent)) {
-    parent[""end""] = System.Diagnostics.Stopwatch.GetTimestamp();
-    if (parent.TryGetValue(""parent"", Profiler_Data.TokenType.DataDictionary, out var value)) {
-        fakeSelf.SetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchParentKey, value.DataDictionary);
-    } else {
-        fakeSelf.SetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchParentKey, null);
-    }
-}}")
+            if (__getProfilerDataReader) {
+                __profilerDataReader = UdonSharpProfiler.UdonProfilerConsts.GetComponentNonProfiled<UdonSharpProfiler.ProfilerDataReader>(UnityEngine.GameObject.Find(""Profiler""));
+                __getProfilerDataReader = !VRC.SDKBase.Utilities.IsValid(__profilerDataReader);
+                if (__getProfilerDataReader) {
+                    UnityEngine.Debug.LogError(""Couldn't find profiler in scene, make sure it's name is \""Profiler\"""");
+                    return;
+                }
+            }
+            
+            VRC.SDK3.Data.DataDictionary info = new VRC.SDK3.Data.DataDictionary();
+            info.Add(""end"", System.Diagnostics.Stopwatch.GetTimestamp());
+
+            __profilerDataReader.QueuePacket(info);
+}")
             ));
 
+        public static FieldDeclarationSyntax CreateField<T>(string name, string defaultValue, string accessibility = "private") {
+            string code = $"{accessibility} {typeof(T).FullName} {name} = {defaultValue};";
+            return (FieldDeclarationSyntax)SyntaxFactory.ParseMemberDeclaration(code);
+        }
+
         public override SyntaxNode Visit(SyntaxNode node) {
-            if (_isRoot) {
-                _isRoot = false;
-                _root = node as CompilationUnitSyntax;
+            if (!_isRoot)
+                return base.Visit(node);
+            
+            _isRoot = false;
+            _root = node as CompilationUnitSyntax;
 
-                if (_root != null) {
-                    UsingDirectiveSyntax dataDictAlias = SyntaxFactory.UsingDirective(
-                            SyntaxFactory.NameEquals(SyntaxFactory.IdentifierName("Profiler_Data")),
-                            SyntaxFactory.ParseName("VRC.SDK3.Data"))
-                        .WithTrailingTrivia(SyntaxFactory.ElasticCarriageReturnLineFeed);
+            if (_root != null) {
+                UsingDirectiveSyntax dataDictAlias = SyntaxFactory.UsingDirective(
+                        SyntaxFactory.NameEquals(SyntaxFactory.IdentifierName("Profiler_Data")),
+                        SyntaxFactory.ParseName("VRC.SDK3.Data"))
+                    .WithTrailingTrivia(SyntaxFactory.ElasticCarriageReturnLineFeed);
 
-                    UsingDirectiveSyntax utilitiesAlias = SyntaxFactory.UsingDirective(
-                            SyntaxFactory.NameEquals(SyntaxFactory.IdentifierName("Profiler_Utilities")),
-                            SyntaxFactory.ParseName("VRC.SDKBase.Utilities"))
-                        .WithTrailingTrivia(SyntaxFactory.ElasticCarriageReturnLineFeed);
+                UsingDirectiveSyntax utilitiesAlias = SyntaxFactory.UsingDirective(
+                        SyntaxFactory.NameEquals(SyntaxFactory.IdentifierName("Profiler_Utilities")),
+                        SyntaxFactory.ParseName("VRC.SDKBase.Utilities"))
+                    .WithTrailingTrivia(SyntaxFactory.ElasticCarriageReturnLineFeed);
 
-                    _root = _root.AddUsings(dataDictAlias, utilitiesAlias);
-                    
-                    // Inject timing functions into the base classes
-                    var classDeclarations = _root.DescendantNodes().OfType<ClassDeclarationSyntax>();
+                _root = _root.AddUsings(dataDictAlias, utilitiesAlias);
 
-                    foreach (var classDeclaration in classDeclarations) {
-                        var newClassDeclaration = classDeclaration.AddMembers(_startTimingMethod, _endTimingMethod);
-                        var isStatic =
-                            classDeclaration.Modifiers.Any(modifier => modifier.IsKind(SyntaxKind.StaticKeyword));
-                        var inheritsFromBaseClass = classDeclaration.BaseList?.Types
-                            .Any(baseType => baseType.ToString() == "UdonSharpBehaviour") ?? false;
-                        if (!isStatic &&
-                            inheritsFromBaseClass) // Don't if it's not a UdonSharpBehaviour or the class is static
-                            node = _root.ReplaceNode(classDeclaration, newClassDeclaration);
-                    }
+                // Inject timing functions into the base classes
+                IEnumerable<ClassDeclarationSyntax> classDeclarations =
+                    _root.DescendantNodes().OfType<ClassDeclarationSyntax>();
+
+                foreach (ClassDeclarationSyntax classDeclaration in classDeclarations) {
+                    bool isStatic =
+                        classDeclaration.Modifiers.Any(modifier => modifier.IsKind(SyntaxKind.StaticKeyword));
+                    bool inheritsFromBaseClass = classDeclaration.BaseList?.Types
+                        .Any(baseType => baseType.ToString() == "UdonSharpBehaviour") ?? false;
+                    if (isStatic || !inheritsFromBaseClass)
+                        continue;
+
+                    ClassDeclarationSyntax newClassDeclaration = classDeclaration.AddMembers(_startTimingMethod, _endTimingMethod, CreateField<ProfilerDataReader>("__profilerDataReader", "null"), CreateField<bool>("__getProfilerDataReader", "true"));
+                    node = _root.ReplaceNode(classDeclaration, newClassDeclaration);
+                    //Debug.Log(node.ToFullString());
                 }
-                else {
-                    Injections.PrintError("Root was null?");
-                }
+            }
+            else {
+                Injections.PrintError("Root was null?");
             }
 
             return base.Visit(node);

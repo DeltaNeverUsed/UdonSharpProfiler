@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using UdonSharp;
+﻿using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
 
@@ -15,13 +14,13 @@ namespace UdonSharpProfiler {
         }
 
         [DontUdonProfile]
-        private void FixedUpdate() {
-            _profilerDataReader.EmitStartEvent("Udon FixedUpdate()");
+        private void Update() {
+            _profilerDataReader.EmitStartEvent("Udon Update()");
         }
 
         [DontUdonProfile]
-        private void Update() {
-            _profilerDataReader.EmitStartEvent("Udon Update()");
+        private void FixedUpdate() {
+            _profilerDataReader.EmitStartEvent("Udon FixedUpdate()");
         }
 
         [DontUdonProfile]

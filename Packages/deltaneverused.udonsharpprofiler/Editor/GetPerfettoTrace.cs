@@ -8,7 +8,7 @@ using File = System.IO.File;
 namespace UdonSharpProfiler {
     public static class GetPerfettoTrace {
         public static void SaveTrace(string trace) {
-            var saveFolder = EditorUtility.SaveFilePanel("Save Trace File", "", "UdonTrace.json", "json");
+            string saveFolder = EditorUtility.SaveFilePanel("Save Trace File", "", "UdonTrace.json", "json");
             if (string.IsNullOrEmpty(saveFolder)) {
                 Injections.PrintError("No folder selected!");
                 return;
@@ -38,12 +38,12 @@ namespace UdonSharpProfiler {
             }
 
             string logContent;
-            using (var file = File.Open(logFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            using (var reader = new StreamReader(file)) {
+            using (FileStream file = File.Open(logFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (StreamReader reader = new(file)) {
                 logContent = reader.ReadToEnd();
             }
 
-            var traceIndex = logContent.LastIndexOf("{  \"traceEvents\": ", StringComparison.Ordinal);
+            int traceIndex = logContent.LastIndexOf("{  \"traceEvents\": ", StringComparison.Ordinal);
 
             if (traceIndex == -1) {
                 Injections.PrintError("Perfetto log not found.");
@@ -56,19 +56,20 @@ namespace UdonSharpProfiler {
 
         [MenuItem("Tools/UdonSharpProfiler/Save VRChat Log")]
         public static void GetVRChatLog() {
-            var vrchatLogFolder = new DirectoryInfo(Directory.GetParent(Application.persistentDataPath).Parent +
-                                  "\\VRChat\\VRChat");
-            var latestLog = vrchatLogFolder.GetFiles()
+            DirectoryInfo vrchatLogFolder = new(Directory.GetParent(Application.persistentDataPath).Parent +
+                                                "\\VRChat\\VRChat");
+            FileInfo latestLog = vrchatLogFolder.GetFiles()
                 .OrderByDescending(f => f.LastWriteTime)
                 .First();
 
             string logContent;
-            using (var file = File.Open(latestLog.ToString(), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            using (var reader = new StreamReader(file)) {
+            using (FileStream file = File.Open(latestLog.ToString(), FileMode.Open, FileAccess.Read,
+                       FileShare.ReadWrite))
+            using (StreamReader reader = new(file)) {
                 logContent = reader.ReadToEnd();
             }
 
-            var traceIndex = logContent.LastIndexOf("{  \"traceEvents\": ", StringComparison.Ordinal);
+            int traceIndex = logContent.LastIndexOf("{  \"traceEvents\": ", StringComparison.Ordinal);
 
             if (traceIndex == -1) {
                 Injections.PrintError("Perfetto log not found.");
@@ -77,7 +78,6 @@ namespace UdonSharpProfiler {
 
             SaveTrace(logContent.Substring(traceIndex,
                 logContent.IndexOf("\n", traceIndex, StringComparison.Ordinal) - traceIndex));
-
         }
     }
 }

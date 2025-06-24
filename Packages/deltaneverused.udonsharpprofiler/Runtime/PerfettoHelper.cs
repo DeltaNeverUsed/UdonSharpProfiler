@@ -7,7 +7,7 @@ namespace UdonSharpProfiler {
 
         TYPE_SLICE_COMPLETE,
 
-        TYPE_INSTANT,
+        TYPE_INSTANT
     }
 
     public static class PerfettoHelper {
@@ -29,7 +29,7 @@ namespace UdonSharpProfiler {
 
         [DontUdonProfile]
         public static DataDictionary CreatePacket() {
-            var packet = new DataDictionary();
+            DataDictionary packet = new();
             return packet;
         }
 
