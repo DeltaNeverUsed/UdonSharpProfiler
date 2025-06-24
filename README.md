@@ -1,5 +1,5 @@
 # UdonSharp Profiler
-Profiling tool for UdonSharpd
+Profiling tool for UdonSharp
 
 # How to use
 1. Download and install the project from my [VCC Listing](https://deltaneverused.github.io/VRChatPackages/)
