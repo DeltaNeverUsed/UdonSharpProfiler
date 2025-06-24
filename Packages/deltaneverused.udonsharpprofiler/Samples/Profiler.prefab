@@ -180,7 +180,7 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 4257191060463753583}
-  recording: 1
+  recording: 0
 --- !u!114 &4257191060463753583
 MonoBehaviour:
   m_ObjectHideFlags: 0

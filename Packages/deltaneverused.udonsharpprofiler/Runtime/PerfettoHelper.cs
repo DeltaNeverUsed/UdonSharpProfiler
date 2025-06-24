@@ -29,7 +29,7 @@ namespace UdonSharpProfiler {
 
         [DontUdonProfile]
         public static DataDictionary CreatePacket() {
-            DataDictionary packet = new();
+            DataDictionary packet = new DataDictionary();
             return packet;
         }
 
