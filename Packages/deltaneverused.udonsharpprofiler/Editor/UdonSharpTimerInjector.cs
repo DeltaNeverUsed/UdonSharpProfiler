@@ -26,14 +26,14 @@ namespace UdonSharpProfiler {
                     @"{
             if (__getProfilerDataReader) {
                 __profilerDataReader = UdonSharpProfiler.UdonProfilerConsts.GetComponentNonProfiled<UdonSharpProfiler.ProfilerDataReader>(UnityEngine.GameObject.Find(""Profiler""));
-                __getProfilerDataReader = !VRC.SDKBase.Utilities.IsValid(__profilerDataReader);
+                __getProfilerDataReader = !global::VRC.SDKBase.Utilities.IsValid(__profilerDataReader);
                 if (__getProfilerDataReader) {
                     UnityEngine.Debug.LogError(""Couldn't find profiler in scene, make sure it's name is \""Profiler\"""");
                     return;
                 }   
             }
             
-            VRC.SDK3.Data.DataDictionary info = new VRC.SDK3.Data.DataDictionary();
+            global::VRC.SDK3.Data.DataDictionary info = new global::VRC.SDK3.Data.DataDictionary();
             string functionName = (string)GetProgramVariable(UdonSharpProfiler.UdonProfilerConsts.StopwatchNameKey);
 
             info.Add(""name"", functionName);
@@ -58,14 +58,14 @@ namespace UdonSharpProfiler {
                     @"{
             if (__getProfilerDataReader) {
                 __profilerDataReader = UdonSharpProfiler.UdonProfilerConsts.GetComponentNonProfiled<UdonSharpProfiler.ProfilerDataReader>(UnityEngine.GameObject.Find(""Profiler""));
-                __getProfilerDataReader = !VRC.SDKBase.Utilities.IsValid(__profilerDataReader);
+                __getProfilerDataReader = !global::VRC.SDKBase.Utilities.IsValid(__profilerDataReader);
                 if (__getProfilerDataReader) {
                     UnityEngine.Debug.LogError(""Couldn't find profiler in scene, make sure it's name is \""Profiler\"""");
                     return;
                 }
             }
             
-            VRC.SDK3.Data.DataDictionary info = new VRC.SDK3.Data.DataDictionary();
+            global::VRC.SDK3.Data.DataDictionary info = new global::VRC.SDK3.Data.DataDictionary();
             info.Add(""end"", System.Diagnostics.Stopwatch.GetTimestamp());
 
             __profilerDataReader.QueuePacket(info);
@@ -87,12 +87,12 @@ namespace UdonSharpProfiler {
             if (_root != null) {
                 UsingDirectiveSyntax dataDictAlias = SyntaxFactory.UsingDirective(
                         SyntaxFactory.NameEquals(SyntaxFactory.IdentifierName("Profiler_Data")),
-                        SyntaxFactory.ParseName("VRC.SDK3.Data"))
+                        SyntaxFactory.ParseName("global::VRC.SDK3.Data"))
                     .WithTrailingTrivia(SyntaxFactory.ElasticCarriageReturnLineFeed);
 
                 UsingDirectiveSyntax utilitiesAlias = SyntaxFactory.UsingDirective(
                         SyntaxFactory.NameEquals(SyntaxFactory.IdentifierName("Profiler_Utilities")),
-                        SyntaxFactory.ParseName("VRC.SDKBase.Utilities"))
+                        SyntaxFactory.ParseName("global::VRC.SDKBase.Utilities"))
                     .WithTrailingTrivia(SyntaxFactory.ElasticCarriageReturnLineFeed);
 
                 _root = _root.AddUsings(dataDictAlias, utilitiesAlias);
